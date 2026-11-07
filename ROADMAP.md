@@ -11,21 +11,25 @@ behaviour regressed. Reading the code and agreeing with it is not enough. That i
 Legend: `[ok]` implemented and pinned by a named test -- `[part]` partial, with what is
 missing stated -- `[ ]` not implemented -- `[no]` deliberate non-goal.
 
+A Where cell marked `(to be written)` names the test that will pin the row once it exists; no
+such test has been written yet, and the row cannot leave `[ ]` until it has. The Milestone
+column places the row on the ladder in section 2, and `-` means it is not placed yet.
+
 Update the affected row in the same commit that changes the behaviour. A row and its test
 drift apart within one release, and the document becomes useless exactly when it is needed.
 
 ## 1. Obligations
 
-| Obligation | Spec | Status | Where |
-|---|---|---|---|
-| `advertise.announce()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::announce` |
-| `advertise.search_response()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::search_response` |
-| `description.render_device_xml()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::render_device_xml` |
-| `scpd.parse_scpd()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::parse_scpd` |
-| `control.dispatch()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::dispatch` |
-| `events.notify()` | GENA 1.0 | `[ ]` | `tests/test_obligations.py::notify` |
-| `events.renew()` | GENA 1.0 | `[ ]` | `tests/test_obligations.py::renew` |
-| `xmlsafe.parse()` | design | `[ ]` | `tests/test_obligations.py::parse` |
+| Obligation | Spec | Status | Where | Milestone |
+|---|---|---|---|---|
+| `advertise.announce()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_announce` (to be written) | M2 |
+| `advertise.search_response()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_search_response` (to be written) | M2 |
+| `description.render_device_xml()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_render_device_xml` (to be written) | M1 |
+| `scpd.parse_scpd()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_parse_scpd` (to be written) | M1 |
+| `control.dispatch()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_dispatch` (to be written) | M3 |
+| `events.notify()` | GENA 1.0 | `[ ]` | `tests/test_obligations.py::test_notify` (to be written) | M4 |
+| `events.renew()` | GENA 1.0 | `[ ]` | `tests/test_obligations.py::test_renew` (to be written) | M4 |
+| `xmlsafe.parse()` | design | `[ ]` | `tests/test_obligations.py::test_parse` (to be written) | M1 |
 
 ## 2. Milestones
 
@@ -55,6 +59,7 @@ the code existing. Coverage in `pyproject.toml` ratchets in the same commit.
 ## 5. Open questions
 
 - depend on the maintained ssdp library or speak multicast HTTP directly
+- M5 names a reference example device and control-point interop, but no api row sits on it: add a row, or drop the rung
 
 ## 6. Publication checklist
 
