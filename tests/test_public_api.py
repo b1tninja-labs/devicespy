@@ -20,8 +20,8 @@ SURFACE = [
     ("description", "render_device_xml", "UDA 2.0"),
     ("scpd", "parse_scpd", "UDA 2.0"),
     ("control", "dispatch", "UDA 2.0"),
-    ("events", "notify", "GENA 1.0"),
-    ("events", "renew", "GENA 1.0"),
+    ("events", "notify", "UDA 2.0"),
+    ("events", "renew", "UDA 2.0"),
     ("xmlsafe", "parse", "design"),
 ]
 

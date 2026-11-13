@@ -43,26 +43,27 @@ document, which is the honest grain size for a plan. See [docs/rfc-map.md](docs/
 
 | Document | Status | Published | What it gives this project |
 |---|---|---|---|
-| UDA 2.0 (UPnP Device Architecture) | UPnP Forum | - | device and service description, control, eventing, boot sequence |
-| GENA 1.0 | OASIS | - | subscribe, renew, notify, unsubscribe |
-| SDDL 1.0 | UPnP Forum | - | device and service description discovery layout |
+| UDA 2.0 (UPnP Device Architecture, document revision 2020-04-17) | Open Connectivity Foundation (took over the UPnP Forum's assets 2016-01-01) | 2020-04-17 | SSDP discovery, device and service description, control, eventing (the GENA-style subscribe, renew, notify, unsubscribe), boot sequence |
+| GENA drafts (draft-cohen-gena-p-base, draft-cohen-gena-client) | two expired Microsoft Internet-Drafts, never an RFC | 1998, 1999 | history only: UDA 2.0 defines the eventing this project implements |
 | RFC 9110 | Internet Standard (STD 97) | 2022-06 | the HTTP semantics every UPnP exchange rides on |
+| RFC 9112 | Internet Standard (STD 99), updated by RFC 9931 | 2022-06 | HTTP/1.1 message syntax; UPnP rides on HTTP/1.1 plus HTTPU and HTTPMU |
+| RFC 9562 | Proposed Standard | 2024-05 | UUID format, for device UUIDs; obsoletes RFC 4122 |
 
 ### Errata watch
 
-- UDA and GENA are outside the RFC series: pin the exact specification revision in every docstring.
-- SSDP itself has a maintained Python owner already (ssdp 1.3.1), so the design decision is whether to depend on it or speak multicast HTTP directly. Record the reasoning in docs/strategy.md before writing code.
+- UDA is outside the RFC series: pin `UDA 2.0 (2020-04-17)` in every docstring and cite a section only after its text has been read (the PDF does not extract as text with the tools used on 2026-11-13).
+- SSDP is specified inside UDA; the only IETF material is an expired Internet-Draft, which is outside rfclib. Decision: speak SSDP, HTTPU and HTTPMU directly on standard-library sockets (docs/strategy.md).
 
 ## Module layout
 
 | Module | Responsibility |
 |---|---|
-| `advertise` | SSDP alive, byebye and search responses (UDA 2.0, SDDL 1.0) |
+| `advertise` | SSDP alive, byebye and search responses (UDA 2.0) |
 | `description` | device and service description documents (UDA 2.0) |
 | `scpd` | service control protocol definition: actions, state variables, allowed values |
 | `control` | SOAP action dispatch with argument coercion (UDA 2.0) |
-| `events` | GENA subscriptions and evented property change notifications (GENA 1.0) |
-| `xmlsafe` | the hardened parser every other module must use |
+| `events` | GENA subscriptions and evented property change notifications (UDA 2.0 eventing) |
+| `xmlsafe` | the hardened XML reader every other module must use: no DTD, no entities, bounded size, depth and attributes (implemented; cwmp consumes it by sibling path) |
 | `httpd` | the small asyncio HTTP surface the device serves (RFC 9110) |
 
 ## What it does not do

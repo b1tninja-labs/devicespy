@@ -27,9 +27,20 @@ drift apart within one release, and the document becomes useless exactly when it
 | `description.render_device_xml()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_render_device_xml` (to be written) | M1 |
 | `scpd.parse_scpd()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_parse_scpd` (to be written) | M1 |
 | `control.dispatch()` | UDA 2.0 | `[ ]` | `tests/test_obligations.py::test_dispatch` (to be written) | M3 |
-| `events.notify()` | GENA 1.0 | `[ ]` | `tests/test_obligations.py::test_notify` (to be written) | M4 |
-| `events.renew()` | GENA 1.0 | `[ ]` | `tests/test_obligations.py::test_renew` (to be written) | M4 |
-| `xmlsafe.parse()` | design | `[ ]` | `tests/test_obligations.py::test_parse` (to be written) | M1 |
+| `events.notify()` | UDA 2.0 eventing | `[ ]` | `tests/test_obligations.py::test_notify` (to be written) | M4 |
+| `events.renew()` | UDA 2.0 eventing | `[ ]` | `tests/test_obligations.py::test_renew` (to be written) | M4 |
+| `xmlsafe.parse()` | design | `[ok]` | `tests/test_xmlsafe.py::test_refuses_doctype`, `tests/test_xmlsafe.py::test_refuses_internal_entity_declaration`, `tests/test_xmlsafe.py::test_depth_limit`, `tests/test_xmlsafe.py::test_huge_attribute_refused` | M1 |
+| SSDP `byebye` on shutdown (`advertise.announce` with the byebye form) | UDA 2.0 | `[ ]` | (to be written) | M2 |
+| SSDP boot id, config id and `NEXTBOOTID.UPNP.ORG` handling | UDA 2.0 | `[ ]` | (to be written) | M2 |
+| max-age re-advertisement and the random delay up to MX on search responses | UDA 2.0 | `[ ]` | (to be written) | M2 |
+| one LOCATION per interface for a multi-homed device | UDA 2.0 | `[ ]` | (to be written) | M2 |
+| subscribe `CALLBACK` URL validation: a subscriber names a URL the device then connects to, so refuse non-LAN and non-HTTP targets (hostile-input row) | UDA 2.0 | `[ ]` | (to be written) | M4 |
+| subscription table, NOTIFY delivery with timeouts and backoff, SEQ handling, expiry sweep | UDA 2.0 | `[ ]` | (to be written) | M4 |
+| SOAP `UPnPError` faults and argument typing from the SCPD data types | UDA 2.0 | `[ ]` | (to be written) | M3 |
+| `example.basic-device`: an independent stdlib control point over loopback fetches the description, invokes an action and receives an event | UDA 2.0 | `[ ]` | (to be written) | M5 |
+| UDA 2.0 section outline, `docs/uda-outline.md`, with each normative sentence a row cites, read from the PDF and dated | UDA 2.0 | `[ ]` | (to be written) | M1 |
+| spine repair: publisher, GENA, SDDL, RFC 9112 recorded in README and rfc-map; the projecthub generator data (`shells/data/naming.py`) still carries the old text; docs here are corrected | design | `[ ]` | (to be written) | M1 |
+| `xmlsafe` XML 1.0 refusal rules for CDATA, `xml:` attributes and charset edge cases checked against the W3C text | XML 1.0 Fifth Edition | `[ ]` | (to be written) | M1 |
 
 ## 2. Milestones
 
@@ -45,8 +56,9 @@ the code existing. Coverage in `pyproject.toml` ratchets in the same commit.
 
 ## 3. Errata watch
 
-- UDA and GENA are outside the RFC series: pin the exact specification revision in every docstring.
-- SSDP itself has a maintained Python owner already (ssdp 1.3.1), so the design decision is whether to depend on it or speak multicast HTTP directly. Record the reasoning in docs/strategy.md before writing code.
+- UDA is outside the RFC series: pin `UDA 2.0 (2020-04-17)` in every docstring and cite no section until the PDF has been read.
+- GENA was two expired Microsoft Internet-Drafts, never OASIS; eventing is defined inside UDA 2.0. "SDDL 1.0" was not found on the Open Connectivity Foundation's UPnP page and is removed.
+- SSDP is specified by UDA 2.0; the only IETF material is an expired draft that rfclib does not hold.
 
 ## 4. Deliberate non-goals
 
@@ -58,7 +70,7 @@ the code existing. Coverage in `pyproject.toml` ratchets in the same commit.
 
 ## 5. Open questions
 
-- depend on the maintained ssdp library or speak multicast HTTP directly
+- closed 2026-11-13: speak SSDP, HTTPU and HTTPMU directly, no dependency on `ssdp` (docs/strategy.md)
 - M5 names a reference example device and control-point interop, but no api row sits on it: add a row, or drop the rung
 
 ## 6. Publication checklist

@@ -1,4 +1,4 @@
-"""SSDP alive, byebye and search responses (UDA 2.0, SDDL 1.0).
+"""SSDP alive, byebye and search responses (UDA 2.0).
 
 Every object in this module is a placeholder until the milestone named in ROADMAP.md lands. A
 stub raises instead of returning a plausible empty value: a protocol library that silently

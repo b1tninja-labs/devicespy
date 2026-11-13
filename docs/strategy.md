@@ -42,3 +42,13 @@ One string everywhere: the distribution, the import and the console script. A na
 means one thing in the installer, in `import` and on `PATH` is the only arrangement that
 cannot surprise anyone, and it is also why this project does not sit one edit away from a
 project that already exists.
+
+## Decisions
+
+- **SSDP is ours (2026-11-13).** devicespy speaks SSDP, HTTPU and HTTPMU on standard-library
+  sockets and does not depend on the `ssdp` package. The portfolio rule is that SSDP stays a
+  transport inside this project (PORTFOLIO.md section 5). The real work is Windows and Linux
+  multicast membership and interface choice (milestone M2).
+- **One hardened XML reader, here (2026-11-13).** `devicespy.xmlsafe.parse` is the only XML
+  entry point for UPnP and for cwmp, which consumes it as a sibling path dependency. It refuses
+  DTDs, entities, non-UTF-8 and over-limit input; see its module docstring.
