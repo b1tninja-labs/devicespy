@@ -5,8 +5,10 @@ reader is built straight on ``xml.parsers.expat`` and refuses, rather than defen
 
 - any document type declaration (so no internal or external entity can be declared, and
   billion-laughs style expansion is impossible), plus any entity or parameter-entity
-  declaration or external reference should one reach a handler anyway. The one exception is a
-  document whose sha256 is on the pin list (:data:`PINNED_DTD_FILES`, see below);
+  declaration or external reference should one reach a handler anyway. The exceptions are a
+  document whose sha256 is on the pin list (:data:`PINNED_DTD_FILES`, see below) and, when the caller
+  passes ``allow_external_id=True``, a bare declaration naming an external identifier with no internal
+  subset (never fetched);
 - any processing instruction other than the XML declaration;
 - any declared encoding other than UTF-8;
 - input larger than ``limit`` bytes, deeper than ``max_depth``, with more than
@@ -140,7 +142,9 @@ class _Builder:
         max_entities: int = 0,
         max_entity_length: int = 0,
         max_text: int = 0,
+        allow_external_id: bool = False,
     ) -> None:
+        self.allow_external_id = allow_external_id
         self.raw = raw
         self.pins = pins
         self.pinned: PinnedDtd | None = None
@@ -166,7 +170,13 @@ class _Builder:
     ) -> None:
         pin = (self.pins or {}).get(hashlib.sha256(self.raw).hexdigest())
         if pin is None or pin.size != len(self.raw):
-            self.refuse()
+            if not self.allow_external_id:
+                self.refuse()
+            if _has_internal:
+                raise XmlForbidden("an internal DTD subset is not accepted")
+            if system_id is None and public_id is None:
+                raise XmlForbidden("a document type declaration needs an external identifier")
+            return
         if system_id is not None or public_id is not None:
             raise XmlForbidden("a pinned document may not name an external DTD")
         self.pinned = pin
@@ -255,6 +265,7 @@ def parse(
     max_entities: int = 64,
     max_entity_length: int = 1024,
     max_text: int | None = None,
+    allow_external_id: bool = False,
 ) -> ET.Element:
     """Parse ``raw`` into an Element, or raise :class:`XmlRefused`; refusal is by design.
 
@@ -272,6 +283,12 @@ def parse(
     :data:`PINNED_DTD_FILES`); pass ``pins={}`` to refuse every DTD whatever the module list says.
     ``max_text`` bounds the characters of text and attribute values after expansion and defaults to
     four times ``limit``.
+
+    ``allow_external_id`` accepts a bare document type declaration that carries a ``SYSTEM`` or
+    ``PUBLIC`` identifier and no internal subset (Gentoo GLSA starts with one). The identifier is never
+    fetched or resolved: parameter-entity and external-subset parsing stay off. A declaration with an
+    internal subset, even an empty ``[]``, or with no identifier is still refused, and so is every entity,
+    notation, element or attribute-list declaration, so no entity can reach the text.
     """
     if not isinstance(raw, bytes | bytearray | memoryview):
         raise TypeError("raw must be bytes")
@@ -294,6 +311,7 @@ def parse(
         max_entities=max_entities,
         max_entity_length=max_entity_length,
         max_text=4 * limit if max_text is None else max_text,
+        allow_external_id=allow_external_id,
     )
     parser = expat.ParserCreate(None, _SEP)
     parser.buffer_text = True
@@ -302,6 +320,7 @@ def parse(
     parser.EntityDeclHandler = builder.entity
     parser.ElementDeclHandler = builder.refuse_markup_decl
     parser.AttlistDeclHandler = builder.refuse_markup_decl
+    parser.SkippedEntityHandler = builder.refuse
     parser.ExternalEntityRefHandler = builder.refuse
     parser.NotationDeclHandler = builder.refuse
     if not ignore_processing_instructions:

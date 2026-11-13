@@ -7,13 +7,46 @@ ssdp 1.3.1 (2025-09-06) plus ssdpy 0.4.1 do discovery.
 
 from __future__ import annotations
 
-from . import advertise, apps, cli, control, description, events, httpd, scpd, xmlsafe
-from .advertise import announce, search_response
-from .control import dispatch
-from .description import render_device_xml
-from .events import notify, renew
-from .scpd import parse_scpd
-from .xmlsafe import parse
+from importlib import import_module
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from . import advertise, apps, cli, control, description, events, httpd, scpd, xmlsafe
+    from .advertise import announce, search_response
+    from .control import dispatch
+    from .description import render_device_xml
+    from .events import notify, renew
+    from .scpd import parse_scpd
+    from .xmlsafe import parse
+
+# PEP 562: nothing below is imported until it is asked for, so `import devicespy.xmlsafe` does not load the
+# UPnP modules (and a caller that only wants the hardened XML reader does not pay for them).
+_SUBMODULES = frozenset(
+    ("advertise", "apps", "cli", "control", "description", "events", "httpd", "scpd", "xmlsafe")
+)
+_ATTRIBUTES = {
+    "announce": "advertise",
+    "search_response": "advertise",
+    "dispatch": "control",
+    "render_device_xml": "description",
+    "notify": "events",
+    "renew": "events",
+    "parse_scpd": "scpd",
+    "parse": "xmlsafe",
+}
+
+
+def __getattr__(name: str) -> Any:
+    if name in _SUBMODULES:
+        return import_module(f"{__name__}.{name}")
+    if name in _ATTRIBUTES:
+        return getattr(import_module(f"{__name__}.{_ATTRIBUTES[name]}"), name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _SUBMODULES | set(_ATTRIBUTES))
+
 
 __version__ = "0.1.0"
 

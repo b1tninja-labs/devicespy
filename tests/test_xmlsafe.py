@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import os
 import socket
+import subprocess
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -349,3 +350,107 @@ def test_the_real_tr_106_types_parses_when_the_cache_has_it():
     assert any("25[0-5]" in v for v in values)
     with pytest.raises(XmlForbidden):
         parse(raw, 1_000_000, pins={})
+
+
+# -- allow_external_id: a bare DOCTYPE naming an external identifier, never fetched ------------------
+
+_SYS = b'<!DOCTYPE glsa SYSTEM "http://www.gentoo.org/dtd/glsa.dtd">'
+_PUB = b'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0//EN" "http://example.invalid/x.dtd">'
+
+
+def _ext(raw: bytes) -> ET.Element:
+    return parse(raw, BIG, allow_external_id=True)
+
+
+def test_external_id_option_is_off_by_default():
+    with pytest.raises(XmlForbidden):
+        parse(_SYS + b"<glsa/>", BIG)
+
+
+def test_external_id_system_and_public_are_accepted_with_the_option():
+    assert (
+        _ext(b'<?xml version="1.0"?>\n' + _SYS + b"\n<glsa id='1'><t>x</t></glsa>").get("id") == "1"
+    )
+    assert _ext(_PUB + b"<html/>").tag == "html"
+
+
+def test_external_id_is_never_fetched(monkeypatch):
+    opened = []
+
+    def spy(self, address):
+        opened.append(address)
+        raise AssertionError("network used")
+
+    monkeypatch.setattr(socket.socket, "connect", spy)
+    monkeypatch.setattr(socket.socket, "connect_ex", spy)
+    _ext(_SYS + b"<glsa/>")
+    assert opened == []
+
+
+@pytest.mark.parametrize(
+    "doc",
+    [
+        b'<!DOCTYPE a SYSTEM "x.dtd" [<!ENTITY e "v">]><a>&e;</a>',
+        b'<!DOCTYPE a SYSTEM "x.dtd" []><a/>',
+        b'<!DOCTYPE a [<!ENTITY e "v">]><a>&e;</a>',
+        b"<!DOCTYPE a><a/>",
+        b'<!DOCTYPE a SYSTEM "x.dtd" [<!ELEMENT a ANY>]><a/>',
+        b'<!DOCTYPE a SYSTEM "x.dtd" [<!ENTITY % p "x">]><a/>',
+        b'<!DOCTYPE a SYSTEM "x.dtd" [<!ENTITY x SYSTEM "file:///etc/passwd">]><a>&x;</a>',
+    ],
+)
+def test_external_id_option_still_refuses_internal_subsets_and_entities(doc):
+    with pytest.raises(XmlForbidden):
+        _ext(doc)
+
+
+def test_external_id_option_refuses_external_entity_reference_without_a_declaration():
+    # No internal subset to declare it in, so a reference is just undeclared: malformed or forbidden, never expanded.
+    with pytest.raises(XmlForbidden):
+        _ext(_SYS + b"<a>&xxe;</a>")
+
+
+def test_external_id_option_refuses_billion_laughs_quickly():
+    laughs = (
+        b'<!DOCTYPE lolz SYSTEM "x.dtd" ['
+        b'<!ENTITY lol "lol">'
+        b'<!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">'
+        b'<!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">'
+        b"]><lolz>&lol3;</lolz>"
+    )
+    start = time.perf_counter()
+    with pytest.raises(XmlForbidden):
+        _ext(laughs)
+    assert time.perf_counter() - start < 1.0
+
+
+def test_external_id_option_keeps_the_other_refusals():
+    with pytest.raises(XmlForbidden):
+        _ext(_SYS + b"<?pi x?><a/>")
+    with pytest.raises(XmlForbidden):
+        _ext(b'<?xml version="1.0" encoding="latin-1"?>' + _SYS + b"<a/>")
+    with pytest.raises(XmlRefused):
+        _ext(_SYS + b"<a/>" * 1 + b"<b/>")
+
+
+def test_importing_xmlsafe_does_not_load_the_upnp_modules():
+    code = (
+        "import sys, devicespy.xmlsafe\n"
+        "bad = [m for m in sys.modules if m.startswith('devicespy.') and m != 'devicespy.xmlsafe']\n"
+        "assert not bad, bad\n"
+        "import devicespy\n"
+        "assert devicespy.parse is devicespy.xmlsafe.parse\n"
+        "assert 'devicespy.advertise' not in sys.modules\n"
+        "devicespy.announce\n"
+        "assert 'devicespy.advertise' in sys.modules\n"
+        "try:\n"
+        "    devicespy.nonesuch\n"
+        "except AttributeError:\n"
+        "    pass\n"
+        "else:\n"
+        "    raise SystemExit('no AttributeError')\n"
+    )
+    root = Path(__file__).resolve().parent.parent
+    env = {**os.environ, "PYTHONPATH": str(root), "PYTHONDONTWRITEBYTECODE": "1"}
+    done = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True)  # noqa: S603
+    assert done.returncode == 0, done.stderr
