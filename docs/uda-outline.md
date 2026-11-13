@@ -8,7 +8,8 @@ printed headings for every clause this repository cites. Only numbers and titles
 specification's text is not vendored.
 
 Clauses cited by code or tests so far: 1.1.4, 1.2.2, 1.2.3, 1.2.4, 1.3.2, 1.3.3, 2.5 (dataType list),
-3.2.5 (Table 3-3), 4.1.2, 4.1.3, 4.1.4 (Tables 4-4 to 4-6), 4.3.2.
+3.2.5 (Table 3-3), 4.1.2, 4.1.3, 4.1.4 (Tables 4-4 to 4-6), 4.2, 4.3, 4.3.2, 4.3.3 (Table 4-8),
+A.2.3 (Table A-1), A.4.1 to A.4.6, A.7.
 
 | Clause | Title |
 |---|---|
