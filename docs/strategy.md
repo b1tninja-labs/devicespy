@@ -51,4 +51,6 @@ project that already exists.
   multicast membership and interface choice (milestone M2).
 - **One hardened XML reader, here (2026-11-13).** `devicespy.xmlsafe.parse` is the only XML
   entry point for UPnP and for cwmp, which consumes it as a sibling path dependency. It refuses
-  DTDs, entities, non-UTF-8 and over-limit input; see its module docstring.
+  DTDs, entities, non-UTF-8 and over-limit input; see its module docstring. The one exception is a
+  sha256 pin list of named files (`tr-106-types.xml`), which may declare bounded internal general
+  entities only (PORTFOLIO.md section 9 item 15).

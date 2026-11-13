@@ -63,7 +63,7 @@ document, which is the honest grain size for a plan. See [docs/rfc-map.md](docs/
 | `scpd` | service control protocol definition: actions, state variables, allowed values |
 | `control` | SOAP action dispatch with argument coercion (UDA 2.0) |
 | `events` | GENA subscriptions and evented property change notifications (UDA 2.0 eventing) |
-| `xmlsafe` | the hardened XML reader every other module must use: no DTD, no entities, bounded size, depth and attributes (implemented; cwmp consumes it by sibling path) |
+| `xmlsafe` | the hardened XML reader every other module must use: no DTD and no entities except the internal general entities of a file on its sha256 pin list (`tr-106-types.xml`), bounded size, depth and attributes (implemented; cwmp consumes it by sibling path) |
 | `httpd` | the small asyncio HTTP surface the device serves (RFC 9110) |
 
 ## What it does not do
